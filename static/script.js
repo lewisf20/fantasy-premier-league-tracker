@@ -1,6 +1,9 @@
 document.addEventListener("DOMContentLoaded", () => {
   const standingsTableBody = document.querySelector("#standingsTable tbody");
   const gameweekSelect = document.getElementById("gameweek");
+  const prevGameweekButton = document.getElementById("prevGameweek");
+  const nextGameweekButton = document.getElementById("nextGameweek");
+  let latestGameweek = 1; // Default to gameweek 1 if not fetched
   let teamNames = {}; // Store team names and manager names by team ID
 
   // Function to load standings and set up team names
@@ -32,14 +35,14 @@ document.addEventListener("DOMContentLoaded", () => {
           // Populate the default standings table
           const row = document.createElement("tr");
           row.innerHTML = `
-                            <td>${rank}</td>
-                            <td>
-                                <span class="team-name">${entry_name}</span><br>
-                                <span class="manager-name">${player_name}</span>
-                            </td>
-                            <td>${event_total}</td>
-                            <td>${total}</td>
-                        `;
+                              <td>${rank}</td>
+                              <td>
+                                  <span class="team-name">${entry_name}</span><br>
+                                  <span class="manager-name">${player_name}</span>
+                              </td>
+                              <td>${event_total}</td>
+                              <td>${total}</td>
+                          `;
           standingsTableBody.appendChild(row);
         });
       })
@@ -59,7 +62,8 @@ document.addEventListener("DOMContentLoaded", () => {
         return response.json();
       })
       .then((data) => {
-        return data.latest_gameweek;
+        latestGameweek = data.latest_gameweek;
+        return latestGameweek;
       })
       .catch((error) => {
         console.error("Error fetching latest gameweek:", error);
@@ -147,15 +151,15 @@ document.addEventListener("DOMContentLoaded", () => {
           const row = document.createElement("tr");
           row.setAttribute("data-team-id", team_id);
           row.innerHTML = `
-            <td>${rank} ${clownHTML}</td>
-            <td>
-                <span class="team-name">${teamName}</span><br>
-                <span class="manager-name">${managerName}</span>
-            </td>
-            <td>${points}</td>
-            <td>${total_points}</td>
-            <td>${movementHTML}</td>
-          `;
+              <td>${rank} ${clownHTML}</td>
+              <td>
+                  <span class="team-name">${teamName}</span><br>
+                  <span class="manager-name">${managerName}</span>
+              </td>
+              <td>${points}</td>
+              <td>${total_points}</td>
+              <td>${movementHTML}</td>
+            `;
           standingsTableBody.appendChild(row);
 
           // Apply animation for rank changes
@@ -180,6 +184,25 @@ document.addEventListener("DOMContentLoaded", () => {
     const selectedGameweek = gameweekSelect.value;
     if (selectedGameweek) {
       loadGameweekStandings(selectedGameweek);
+    }
+  });
+
+  // Event listeners for next and previous buttons
+  prevGameweekButton.addEventListener("click", () => {
+    let currentGameweek = parseInt(gameweekSelect.value, 10);
+    if (currentGameweek > 1) {
+      currentGameweek -= 1;
+      gameweekSelect.value = currentGameweek;
+      loadGameweekStandings(currentGameweek);
+    }
+  });
+
+  nextGameweekButton.addEventListener("click", () => {
+    let currentGameweek = parseInt(gameweekSelect.value, 10);
+    if (currentGameweek < latestGameweek) {
+      currentGameweek += 1;
+      gameweekSelect.value = currentGameweek;
+      loadGameweekStandings(currentGameweek);
     }
   });
 

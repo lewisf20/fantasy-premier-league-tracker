@@ -105,13 +105,11 @@ td .manager-name {
   
 /* Highlight rows that moved up */
 .rank-up {
-  background-color: #d4edda; /* Light green */
   animation: rank-up-animation 0.5s ease, fade-out 6s 0.5s forwards;
 }
 
 /* Highlight rows that moved down */
 .rank-down {
-  background-color: #f8d7da; /* Light red */
   animation: rank-down-animation 0.5s ease, fade-out 6s 0.5s forwards;
 }
 
@@ -121,6 +119,35 @@ td .manager-name {
   height: 24px;
   margin-left: 5px;
   vertical-align: middle;
+}
+
+/* Center the gameweek navigation buttons */
+.gameweek-navigation {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+/* Style the buttons */
+.gameweek-navigation button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin: 0 5px;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.gameweek-navigation button:hover {
+    background-color: #0056b3;
+}
+
+.gameweek-navigation button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
 }
 
 /* Keyframes for fade-out */
