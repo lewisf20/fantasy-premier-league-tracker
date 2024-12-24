@@ -60,14 +60,14 @@ document.addEventListener("DOMContentLoaded", () => {
           const row = document.createElement("tr");
           row.setAttribute("data-team-id", entry);
           row.innerHTML = `
-                                <td>${rank} ${clownHTML}</td>
-                                <td>
-                                    <span class="team-name">${entry_name}</span><br>
-                                    <span class="manager-name">${player_name}</span>
-                                </td>
-                                <td>${event_total}</td>
-                                <td>${total}</td>
-                            `;
+                                  <td>${rank} ${clownHTML}</td>
+                                  <td>
+                                      <span class="team-name">${entry_name}</span><br>
+                                      <span class="manager-name">${player_name}</span>
+                                  </td>
+                                  <td>${event_total}</td>
+                                  <td>${total}</td>
+                              `;
           standingsTableBody.appendChild(row);
 
           // Add click event listener to show team history
@@ -116,103 +116,121 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Function to fetch and display standings for the selected gameweek
   function loadGameweekStandings(gameweek) {
-    const previousRows = Array.from(standingsTableBody.children); // Store the previous rows
+    const previousGameweek = gameweek - 1;
 
-    fetch(`http://localhost:8080/history?gameweek=${gameweek}`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch gameweek data");
-        }
-        return response.json();
-      })
-      .then((data) => {
-        // Find the lowest points in the gameweek data
-        const minPoints = Math.min(...data.map((team) => team.points));
+    // Fetch previous gameweek standings if not the first gameweek
+    const previousGameweekPromise =
+      previousGameweek > 0
+        ? fetch(
+            `http://localhost:8080/history?gameweek=${previousGameweek}`
+          ).then((response) => response.json())
+        : Promise.resolve([]);
 
-        // Identify all teams with the lowest points
-        const clownsOfTheWeek = data.filter(
-          (team) => team.points === minPoints
-        );
+    previousGameweekPromise.then((previousData) => {
+      const previousRankMap = previousData.reduce((map, team) => {
+        map[team.team_id] = team.rank;
+        return map;
+      }, {});
 
-        // Create a mapping of previous ranks by team_id
-        const previousRankMap = previousRows.reduce((map, row, index) => {
-          const teamId = row.getAttribute("data-team-id");
-          map[teamId] = index + 1;
-          return map;
-        }, {});
-
-        // Clear the table before populating
-        standingsTableBody.innerHTML = "";
-
-        // Populate the table with gameweek data
-        data.forEach((team) => {
-          const { team_id, rank, points, total_points } = team;
-
-          // Match `team_id` to entry ID in teamNames
-          const teamData = teamNames[team_id];
-
-          if (!teamData) {
-            console.warn(`No team data found for team_id: ${team_id}`);
+      fetch(`http://localhost:8080/history?gameweek=${gameweek}`)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Failed to fetch gameweek data");
           }
+          return response.json();
+        })
+        .then((data) => {
+          // Find the lowest points in the gameweek data
+          const minPoints = Math.min(...data.map((team) => team.points));
 
-          const { teamName = "Unknown Team", managerName = "Unknown Manager" } =
-            teamData || {};
-
-          // Calculate rank movement
-          const previousRank = previousRankMap[team_id] || rank;
-          const movement = previousRank - rank; // Positive for upward movement, negative for downward
-
-          // Choose icon based on movement
-          let movementHTML = `<span class="no-change-icon bi bi-dash-circle-fill" style="color: gray;"></span>`;
-          if (movement > 0) {
-            movementHTML = `<span class="rank-up-icon bi bi-arrow-up-circle-fill" style="color: green;"></span> ${movement}`;
-          } else if (movement < 0) {
-            movementHTML = `<span class="rank-down-icon bi bi-arrow-down-circle-fill" style="color: red;"></span> ${-movement}`;
-          }
-
-          // Determine if this row is one of the Clowns of the Week
-          const isClown = clownsOfTheWeek.some(
-            (clown) => clown.team_id === team_id
+          // Identify all teams with the lowest points
+          const clownsOfTheWeek = data.filter(
+            (team) => team.points === minPoints
           );
-          const clownHTML = isClown
-            ? `<img src="./images/clown.png" alt="Clown of the Week" title="Clown of the Week" class="clown-icon">`
-            : "";
 
-          const row = document.createElement("tr");
-          row.setAttribute("data-team-id", team_id);
-          row.innerHTML = `
-                <td>${rank} ${clownHTML}</td>
-                <td>
-                    <span class="team-name">${teamName}</span><br>
-                    <span class="manager-name">${managerName}</span>
-                </td>
-                <td>${points}</td>
-                <td>${total_points}</td>
-                <td>${movementHTML}</td>
-              `;
-          standingsTableBody.appendChild(row);
+          // Clear the table before populating
+          standingsTableBody.innerHTML = "";
 
-          // Apply animation for rank changes
-          row.classList.remove("rank-up", "rank-down"); // Clear previous classes
-          if (movement !== 0) {
-            row.classList.add(movement > 0 ? "rank-up" : "rank-down");
-          }
+          // Populate the table with gameweek data
+          data.forEach((team) => {
+            const { team_id, rank, points, total_points } = team;
 
-          // Highlight the COTW row (Optional)
-          if (isClown) {
-            row.classList.add("clown-row");
-          }
+            // Match `team_id` to entry ID in teamNames
+            const teamData = teamNames[team_id];
 
-          // Add click event listener to show team history
-          row.addEventListener("click", () => {
-            showTeamHistory(team_id);
+            if (!teamData) {
+              console.warn(`No team data found for team_id: ${team_id}`);
+            }
+
+            const {
+              teamName = "Unknown Team",
+              managerName = "Unknown Manager",
+            } = teamData || {};
+
+            // Calculate rank movement
+            let movementHTML = `<span class="no-change-icon bi bi-dash-circle-fill" style="color: gray;"></span>`;
+            if (gameweek > 1) {
+              const previousRank = previousRankMap[team_id] || rank;
+              const movement = previousRank - rank; // Positive for upward movement, negative for downward
+
+              // Choose icon based on movement
+              if (movement > 0) {
+                movementHTML = `<span class="rank-up-icon bi bi-arrow-up-circle-fill" style="color: green;"></span> ${movement}`;
+              } else if (movement < 0) {
+                movementHTML = `<span class="rank-down-icon bi bi-arrow-down-circle-fill" style="color: red;"></span> ${-movement}`;
+              }
+            }
+
+            // Determine if this row is one of the Clowns of the Week
+            const isClown = clownsOfTheWeek.some(
+              (clown) => clown.team_id === team_id
+            );
+            const clownHTML = isClown
+              ? `<img src="./images/clown.png" alt="Clown of the Week" title="Clown of the Week" class="clown-icon">`
+              : "";
+
+            const row = document.createElement("tr");
+            row.setAttribute("data-team-id", team_id);
+            row.innerHTML = `
+                  <td>${rank} ${clownHTML}</td>
+                  <td>
+                      <span class="team-name">${teamName}</span><br>
+                      <span class="manager-name">${managerName}</span>
+                  </td>
+                  <td>${points}</td>
+                  <td>${total_points}</td>
+                  <td>${movementHTML}</td>
+                `;
+            standingsTableBody.appendChild(row);
+
+            // Apply animation for rank changes
+            row.classList.remove("rank-up", "rank-down"); // Clear previous classes
+            if (
+              gameweek > 1 &&
+              movementHTML !==
+                `<span class="no-change-icon bi bi-dash-circle-fill" style="color: gray;"></span>`
+            ) {
+              row.classList.add(
+                movementHTML.includes("rank-up") ? "rank-up" : "rank-down"
+              );
+            }
+
+            // Highlight the COTW row (Optional)
+            if (isClown) {
+              row.classList.add("clown-row");
+            }
+
+            // Add click event listener to show team history
+            row.addEventListener("click", () => {
+              showTeamHistory(team_id);
+            });
           });
+        })
+        .catch((error) => {
+          console.error("Error fetching gameweek data:", error);
+          standingsTableBody.innerHTML = `<tr><td colspan="5">Failed to load gameweek data</td></tr>`;
         });
-      })
-      .catch((error) => {
-        console.error("Error fetching gameweek data:", error);
-        standingsTableBody.innerHTML = `<tr><td colspan="5">Failed to load gameweek data</td></tr>`;
-      });
+    });
   }
 
   // Function to show team history in a modal
