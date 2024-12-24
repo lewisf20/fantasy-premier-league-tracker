@@ -82,6 +82,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Function to fetch and display standings for the selected gameweek
   function loadGameweekStandings(gameweek) {
+    const previousRows = Array.from(standingsTableBody.children); // Store the previous rows
+
     fetch(`http://localhost:8080/history?gameweek=${gameweek}`)
       .then((response) => {
         if (!response.ok) {
@@ -90,11 +92,17 @@ document.addEventListener("DOMContentLoaded", () => {
         return response.json();
       })
       .then((data) => {
+        // Create a mapping of current rows by team_id for comparison
+        const currentDataMap = data.reduce((map, team) => {
+          map[team.team_id] = team;
+          return map;
+        }, {});
+
         // Clear the table before populating
         standingsTableBody.innerHTML = "";
 
         // Populate the table with gameweek data
-        data.forEach((team) => {
+        data.forEach((team, index) => {
           const { team_id, rank, points, total_points } = team;
 
           // Match `team_id` to entry ID in teamNames
@@ -108,16 +116,30 @@ document.addEventListener("DOMContentLoaded", () => {
             teamData || {};
 
           const row = document.createElement("tr");
+          row.setAttribute("data-team-id", team_id);
           row.innerHTML = `
-                            <td>${rank}</td>
-                            <td>
-                                <span class="team-name">${teamName}</span><br>
-                                <span class="manager-name">${managerName}</span>
-                            </td>
-                            <td>${points}</td>
-                            <td>${total_points}</td>
-                        `;
+            <td>${rank}</td>
+            <td>
+                <span class="team-name">${teamName}</span><br>
+                <span class="manager-name">${managerName}</span>
+            </td>
+            <td>${points}</td>
+            <td>${total_points}</td>
+          `;
           standingsTableBody.appendChild(row);
+
+          // Apply animation for rank changes
+          const previousRow = previousRows.find(
+            (prevRow) =>
+              prevRow.getAttribute("data-team-id") === String(team_id)
+          );
+          if (previousRow) {
+            const previousRank =
+              Array.from(previousRows).indexOf(previousRow) + 1;
+            if (previousRank !== rank) {
+              row.classList.add(previousRank > rank ? "rank-up" : "rank-down");
+            }
+          }
         });
       })
       .catch((error) => {
