@@ -3,6 +3,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const gameweekSelect = document.getElementById("gameweek");
   const prevGameweekButton = document.getElementById("prevGameweek");
   const nextGameweekButton = document.getElementById("nextGameweek");
+  const historyModal = document.getElementById("historyModal");
+  const closeModal = document.querySelector(".close");
+  const historyChartCtx = document
+    .getElementById("historyChart")
+    .getContext("2d");
+  let historyChart;
   let latestGameweek = 1; // Default to gameweek 1 if not fetched
   let teamNames = {}; // Store team names and manager names by team ID
 
@@ -18,6 +24,16 @@ document.addEventListener("DOMContentLoaded", () => {
       .then((data) => {
         const results = data.standings.results;
 
+        // Find the lowest points in the standings data
+        const minPoints = Math.min(
+          ...results.map((player) => player.event_total)
+        );
+
+        // Identify all teams with the lowest points
+        const clownsOfTheWeek = results.filter(
+          (player) => player.event_total === minPoints
+        );
+
         // Clear the table before populating
         standingsTableBody.innerHTML = "";
 
@@ -32,18 +48,32 @@ document.addEventListener("DOMContentLoaded", () => {
             managerName: player_name,
           };
 
+          // Determine if this row is one of the Clowns of the Week
+          const isClown = clownsOfTheWeek.some(
+            (clown) => clown.entry === entry
+          );
+          const clownHTML = isClown
+            ? `<img src="./images/clown.png" alt="Clown of the Week" title="Clown of the Week" class="clown-icon">`
+            : "";
+
           // Populate the default standings table
           const row = document.createElement("tr");
+          row.setAttribute("data-team-id", entry);
           row.innerHTML = `
-                              <td>${rank}</td>
-                              <td>
-                                  <span class="team-name">${entry_name}</span><br>
-                                  <span class="manager-name">${player_name}</span>
-                              </td>
-                              <td>${event_total}</td>
-                              <td>${total}</td>
-                          `;
+                                <td>${rank} ${clownHTML}</td>
+                                <td>
+                                    <span class="team-name">${entry_name}</span><br>
+                                    <span class="manager-name">${player_name}</span>
+                                </td>
+                                <td>${event_total}</td>
+                                <td>${total}</td>
+                            `;
           standingsTableBody.appendChild(row);
+
+          // Add click event listener to show team history
+          row.addEventListener("click", () => {
+            showTeamHistory(entry);
+          });
         });
       })
       .catch((error) => {
@@ -151,18 +181,19 @@ document.addEventListener("DOMContentLoaded", () => {
           const row = document.createElement("tr");
           row.setAttribute("data-team-id", team_id);
           row.innerHTML = `
-              <td>${rank} ${clownHTML}</td>
-              <td>
-                  <span class="team-name">${teamName}</span><br>
-                  <span class="manager-name">${managerName}</span>
-              </td>
-              <td>${points}</td>
-              <td>${total_points}</td>
-              <td>${movementHTML}</td>
-            `;
+                <td>${rank} ${clownHTML}</td>
+                <td>
+                    <span class="team-name">${teamName}</span><br>
+                    <span class="manager-name">${managerName}</span>
+                </td>
+                <td>${points}</td>
+                <td>${total_points}</td>
+                <td>${movementHTML}</td>
+              `;
           standingsTableBody.appendChild(row);
 
           // Apply animation for rank changes
+          row.classList.remove("rank-up", "rank-down"); // Clear previous classes
           if (movement !== 0) {
             row.classList.add(movement > 0 ? "rank-up" : "rank-down");
           }
@@ -171,6 +202,11 @@ document.addEventListener("DOMContentLoaded", () => {
           if (isClown) {
             row.classList.add("clown-row");
           }
+
+          // Add click event listener to show team history
+          row.addEventListener("click", () => {
+            showTeamHistory(team_id);
+          });
         });
       })
       .catch((error) => {
@@ -178,6 +214,88 @@ document.addEventListener("DOMContentLoaded", () => {
         standingsTableBody.innerHTML = `<tr><td colspan="5">Failed to load gameweek data</td></tr>`;
       });
   }
+
+  // Function to show team history in a modal
+  function showTeamHistory(teamId) {
+    fetch(`http://localhost:8080/team_history?team_id=${teamId}`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch team history");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        const labels = data.current.map((gw) => `GW ${gw.event}`);
+        const points = data.current.map((gw) => gw.points);
+        const totalPoints = data.current.map((gw) => gw.total_points);
+
+        // Destroy previous chart instance if it exists
+        if (historyChart) {
+          historyChart.destroy();
+        }
+
+        // Create a new chart
+        historyChart = new Chart(historyChartCtx, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Points",
+                data: points,
+                borderColor: "rgba(75, 192, 192, 1)",
+                backgroundColor: "rgba(75, 192, 192, 0.2)",
+                fill: false,
+              },
+              {
+                label: "Total Points",
+                data: totalPoints,
+                borderColor: "rgba(153, 102, 255, 1)",
+                backgroundColor: "rgba(153, 102, 255, 0.2)",
+                fill: false,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            scales: {
+              x: {
+                display: true,
+                title: {
+                  display: true,
+                  text: "Gameweek",
+                },
+              },
+              y: {
+                display: true,
+                title: {
+                  display: true,
+                  text: "Points",
+                },
+              },
+            },
+          },
+        });
+
+        // Show the modal
+        historyModal.style.display = "block";
+      })
+      .catch((error) => {
+        console.error("Error fetching team history:", error);
+      });
+  }
+
+  // Event listener to close the modal
+  closeModal.addEventListener("click", () => {
+    historyModal.style.display = "none";
+  });
+
+  // Event listener to close the modal when clicking outside of it
+  window.addEventListener("click", (event) => {
+    if (event.target === historyModal) {
+      historyModal.style.display = "none";
+    }
+  });
 
   // Event listener for dropdown selection
   gameweekSelect.addEventListener("change", () => {

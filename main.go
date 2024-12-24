@@ -3,9 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"sort"
+	"strconv"
 	"sync"
+	"time"
 )
 
 const (
@@ -27,7 +30,6 @@ const (
 )
 
 func main() {
-
 	handleRequests()
 
 	fmt.Println("Starting server at port 8080")
@@ -39,9 +41,20 @@ func main() {
 func handleRequests() {
 	fs := http.FileServer(http.Dir("./static"))
 	http.Handle("/", fs)
-	http.HandleFunc("/standings", standingsHandler)
-	http.HandleFunc("/history", historyHandler)
-	http.HandleFunc("/latest_gameweek", latestGameweekHandler)
+	http.HandleFunc("/standings", withLogging(standingsHandler))
+	http.HandleFunc("/history", withLogging(historyHandler))
+	http.HandleFunc("/latest_gameweek", withLogging(latestGameweekHandler))
+	http.HandleFunc("/team_history", withLogging(teamHistoryHandler))
+}
+
+// withLogging is a middleware that logs the duration of each request
+func withLogging(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		next.ServeHTTP(w, r)
+		duration := time.Since(start).Milliseconds()
+		log.Printf("%s %s took %d ms", r.Method, r.URL.Path, duration)
+	}
 }
 
 // get standings
@@ -87,9 +100,11 @@ type StandingsResponse struct {
 }
 
 func standingsHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("standingsHandler: Received request")
 	resp, err := http.Get("https://fantasy.premierleague.com/api/leagues-classic/979679/standings/")
 	if err != nil {
 		http.Error(w, "Failed to fetch standings", http.StatusInternalServerError)
+		log.Println("Error: Failed to fetch standings", err)
 		return
 	}
 	defer resp.Body.Close()
@@ -97,13 +112,17 @@ func standingsHandler(w http.ResponseWriter, r *http.Request) {
 	var standings StandingsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&standings); err != nil {
 		http.Error(w, "Failed to decode JSON", http.StatusInternalServerError)
+		log.Println("Error: Failed to decode JSON", err)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(standings); err != nil {
 		http.Error(w, "Failed to encode JSON", http.StatusInternalServerError)
+		log.Println("Error: Failed to encode JSON", err)
+		return
 	}
+	log.Println("standingsHandler: Successfully handled request")
 }
 
 // get history
@@ -126,9 +145,11 @@ type LeagueHistoryData struct {
 
 // historyHandler fetches the history for each team and filters by game week
 func historyHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("historyHandler: Received request")
 	gameWeek := r.URL.Query().Get("gameweek")
 	if gameWeek == "" {
 		http.Error(w, "Gameweek parameter is required", http.StatusBadRequest)
+		log.Println("Error: Gameweek parameter is required")
 		return
 	}
 
@@ -200,11 +221,15 @@ func historyHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(historyData); err != nil {
 		http.Error(w, "Failed to encode history data", http.StatusInternalServerError)
+		log.Println("Error: Failed to encode history data", err)
+		return
 	}
+	log.Println("historyHandler: Successfully handled request")
 }
 
 // latestGameweekHandler fetches the history for each team and determines the latest gameweek
 func latestGameweekHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("latestGameweekHandler: Received request")
 	teamIDs := []int{
 		lewisTeamID,
 		ryanTeamID,
@@ -257,5 +282,49 @@ func latestGameweekHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(map[string]int{"latest_gameweek": latestGameweek}); err != nil {
 		http.Error(w, "Failed to encode latest gameweek", http.StatusInternalServerError)
+		log.Println("Error: Failed to encode latest gameweek", err)
+		return
 	}
+	log.Println("latestGameweekHandler: Successfully handled request")
+}
+
+// teamHistoryHandler fetches the history for a specific team
+func teamHistoryHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("teamHistoryHandler: Received request")
+	teamID := r.URL.Query().Get("team_id")
+	if teamID == "" {
+		http.Error(w, "Team ID parameter is required", http.StatusBadRequest)
+		log.Println("Error: Team ID parameter is required")
+		return
+	}
+
+	teamIDInt, err := strconv.Atoi(teamID)
+	if err != nil {
+		http.Error(w, "Invalid team ID", http.StatusBadRequest)
+		log.Println("Error: Invalid team ID", err)
+		return
+	}
+	url := fmt.Sprintf(BaseHistoryURL, teamIDInt)
+	resp, err := http.Get(url)
+	if err != nil {
+		http.Error(w, "Failed to fetch team history", http.StatusInternalServerError)
+		log.Println("Error: Failed to fetch team history", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	var history HistoryResponse
+	if err := json.NewDecoder(resp.Body).Decode(&history); err != nil {
+		http.Error(w, "Failed to decode JSON", http.StatusInternalServerError)
+		log.Println("Error: Failed to decode JSON", err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(history); err != nil {
+		http.Error(w, "Failed to encode JSON", http.StatusInternalServerError)
+		log.Println("Error: Failed to encode JSON", err)
+		return
+	}
+	log.Println("teamHistoryHandler: Successfully handled request")
 }
