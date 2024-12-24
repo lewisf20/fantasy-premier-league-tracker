@@ -87,18 +87,33 @@ td .manager-name {
     color: #fff;
 }
 
+/* Icons for rank movement */
+.rank-up-icon {
+  color: green;
+  font-size: 1.2em;
+}
+  
+.rank-down-icon {
+  color: red;
+  font-size: 1.2em;
+}
+
+.no-change-icon {
+  color: gray;
+  font-size: 1.2em;
+}
   
 /* Highlight rows that moved up */
 .rank-up {
-    background-color: #d4edda; /* Light green */
-    animation: rank-up-animation 0.5s ease, fade-out 6s 0.5s forwards;
-  }
-  
-  /* Highlight rows that moved down */
-  .rank-down {
-    background-color: #f8d7da; /* Light red */
-    animation: rank-down-animation 0.5s ease, fade-out 6s 0.5s forwards;
-  }
+  background-color: #d4edda; /* Light green */
+  animation: rank-up-animation 0.5s ease, fade-out 6s 0.5s forwards;
+}
+
+/* Highlight rows that moved down */
+.rank-down {
+  background-color: #f8d7da; /* Light red */
+  animation: rank-down-animation 0.5s ease, fade-out 6s 0.5s forwards;
+}
 
 /* Keyframes for fade-out */
 @keyframes fade-out {
@@ -107,25 +122,25 @@ td .manager-name {
     }
   }
   
-  /* Keyframes for rank animations */
-  @keyframes rank-up-animation {
-    from {
-      transform: translateY(10px);
-      opacity: 0.5;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
+/* Keyframes for rank animations */
+@keyframes rank-up-animation {
+  from {
+    transform: translateY(30px);
+    opacity: 0.5;
   }
-  
-  @keyframes rank-down-animation {
-    from {
-      transform: translateY(-10px);
-      opacity: 0.5;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
+}
+
+@keyframes rank-down-animation {
+  from {
+    transform: translateY(-30px);
+    opacity: 0.5;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

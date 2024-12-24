@@ -92,9 +92,10 @@ document.addEventListener("DOMContentLoaded", () => {
         return response.json();
       })
       .then((data) => {
-        // Create a mapping of current rows by team_id for comparison
-        const currentDataMap = data.reduce((map, team) => {
-          map[team.team_id] = team;
+        // Create a mapping of previous ranks by team_id
+        const previousRankMap = previousRows.reduce((map, row, index) => {
+          const teamId = row.getAttribute("data-team-id");
+          map[teamId] = index + 1;
           return map;
         }, {});
 
@@ -102,7 +103,7 @@ document.addEventListener("DOMContentLoaded", () => {
         standingsTableBody.innerHTML = "";
 
         // Populate the table with gameweek data
-        data.forEach((team, index) => {
+        data.forEach((team) => {
           const { team_id, rank, points, total_points } = team;
 
           // Match `team_id` to entry ID in teamNames
@@ -115,6 +116,18 @@ document.addEventListener("DOMContentLoaded", () => {
           const { teamName = "Unknown Team", managerName = "Unknown Manager" } =
             teamData || {};
 
+          // Calculate rank movement
+          const previousRank = previousRankMap[team_id] || rank;
+          const movement = previousRank - rank; // Positive for upward movement, negative for downward
+
+          // Choose icon based on movement
+          let movementHTML = `<span class="no-change-icon bi bi-dash-circle-fill" style="color: gray;"></span>`; // Default: No movement
+          if (movement > 0) {
+            movementHTML = `<span class="rank-up-icon bi bi-arrow-up-circle-fill" style="color: green;"></span> ${movement}`;
+          } else if (movement < 0) {
+            movementHTML = `<span class="rank-down-icon bi bi-arrow-down-circle-fill" style="color: red;"></span> ${-movement}`;
+          }
+
           const row = document.createElement("tr");
           row.setAttribute("data-team-id", team_id);
           row.innerHTML = `
@@ -125,26 +138,19 @@ document.addEventListener("DOMContentLoaded", () => {
             </td>
             <td>${points}</td>
             <td>${total_points}</td>
+            <td>${movementHTML}</td>
           `;
           standingsTableBody.appendChild(row);
 
           // Apply animation for rank changes
-          const previousRow = previousRows.find(
-            (prevRow) =>
-              prevRow.getAttribute("data-team-id") === String(team_id)
-          );
-          if (previousRow) {
-            const previousRank =
-              Array.from(previousRows).indexOf(previousRow) + 1;
-            if (previousRank !== rank) {
-              row.classList.add(previousRank > rank ? "rank-up" : "rank-down");
-            }
+          if (movement !== 0) {
+            row.classList.add(movement > 0 ? "rank-up" : "rank-down");
           }
         });
       })
       .catch((error) => {
         console.error("Error fetching gameweek data:", error);
-        standingsTableBody.innerHTML = `<tr><td colspan="4">Failed to load gameweek data</td></tr>`;
+        standingsTableBody.innerHTML = `<tr><td colspan="5">Failed to load gameweek data</td></tr>`;
       });
   }
 
