@@ -115,6 +115,14 @@ td .manager-name {
   animation: rank-down-animation 0.5s ease, fade-out 6s 0.5s forwards;
 }
 
+/* Clown image styling */
+.clown-icon {
+  width: 24px;
+  height: 24px;
+  margin-left: 5px;
+  vertical-align: middle;
+}
+
 /* Keyframes for fade-out */
 @keyframes fade-out {
     to {

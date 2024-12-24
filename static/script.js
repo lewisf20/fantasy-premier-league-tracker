@@ -92,6 +92,14 @@ document.addEventListener("DOMContentLoaded", () => {
         return response.json();
       })
       .then((data) => {
+        // Find the lowest points in the gameweek data
+        const minPoints = Math.min(...data.map((team) => team.points));
+
+        // Identify all teams with the lowest points
+        const clownsOfTheWeek = data.filter(
+          (team) => team.points === minPoints
+        );
+
         // Create a mapping of previous ranks by team_id
         const previousRankMap = previousRows.reduce((map, row, index) => {
           const teamId = row.getAttribute("data-team-id");
@@ -121,17 +129,25 @@ document.addEventListener("DOMContentLoaded", () => {
           const movement = previousRank - rank; // Positive for upward movement, negative for downward
 
           // Choose icon based on movement
-          let movementHTML = `<span class="no-change-icon bi bi-dash-circle-fill" style="color: gray;"></span>`; // Default: No movement
+          let movementHTML = `<span class="no-change-icon bi bi-dash-circle-fill" style="color: gray;"></span>`;
           if (movement > 0) {
             movementHTML = `<span class="rank-up-icon bi bi-arrow-up-circle-fill" style="color: green;"></span> ${movement}`;
           } else if (movement < 0) {
             movementHTML = `<span class="rank-down-icon bi bi-arrow-down-circle-fill" style="color: red;"></span> ${-movement}`;
           }
 
+          // Determine if this row is one of the Clowns of the Week
+          const isClown = clownsOfTheWeek.some(
+            (clown) => clown.team_id === team_id
+          );
+          const clownHTML = isClown
+            ? `<img src="./images/clown.png" alt="Clown of the Week" title="Clown of the Week" class="clown-icon">`
+            : "";
+
           const row = document.createElement("tr");
           row.setAttribute("data-team-id", team_id);
           row.innerHTML = `
-            <td>${rank}</td>
+            <td>${rank} ${clownHTML}</td>
             <td>
                 <span class="team-name">${teamName}</span><br>
                 <span class="manager-name">${managerName}</span>
@@ -145,6 +161,11 @@ document.addEventListener("DOMContentLoaded", () => {
           // Apply animation for rank changes
           if (movement !== 0) {
             row.classList.add(movement > 0 ? "rank-up" : "rank-down");
+          }
+
+          // Highlight the COTW row (Optional)
+          if (isClown) {
+            row.classList.add("clown-row");
           }
         });
       })
