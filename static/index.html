@@ -12,8 +12,17 @@
 <body>
     <h1>Fantasy Premier League Standings</h1>
 
+    <!-- Form to enter LeagueID -->
+    <div id="leagueIdForm">
+        <label for="leagueId">Enter League ID:</label>
+        <input type="text" id="leagueId" name="leagueId">
+        <button id="submitLeagueId">Submit</button>
+    </div>
+
+    <!-- League title -->
+    <h2 id="leagueTitle" class="league-title"></h2>
+
     <!-- Dropdown for selecting gameweek -->
-    <label for="gameweek">Select Gameweek:</label>
     <select id="gameweek">
         <!-- Options will be dynamically populated -->
     </select>

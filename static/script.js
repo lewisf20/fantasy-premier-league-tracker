@@ -1,3 +1,4 @@
+// filepath: /C:/Users/lewis/Desktop/Projects - Coding/Fantasy Premier League Tracker/fantasy-premier-league-tracker/static/script.js
 document.addEventListener("DOMContentLoaded", () => {
   const standingsTableBody = document.querySelector("#standingsTable tbody");
   const gameweekSelect = document.getElementById("gameweek");
@@ -8,30 +9,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const historyChartCtx = document
     .getElementById("historyChart")
     .getContext("2d");
+  const submitLeagueIdButton = document.getElementById("submitLeagueId");
+  const leagueTitle = document.getElementById("leagueTitle");
   let historyChart;
   let latestGameweek = 1; // Default to gameweek 1 if not fetched
-
-  /**
-   * @typedef {Object} Gameweek
-   * @property {number} Gameweek - The gameweek number
-   * @property {number} Points - The points scored in the gameweek
-   * @property {number} TotalPoints - The total points up to this gameweek
-   */
-
-  /**
-   * @typedef {Object} TeamDetails
-   * @property {number} TeamID - The team ID
-   * @property {string} PlayerName - The player's name
-   * @property {string} EntryName - The entry name
-   * @property {Gameweek[]} History - The history of gameweeks
-   */
 
   /** @type {TeamDetails[]} */
   let teamDetails = []; // Store team details
 
   // Function to load standings and set up team names
-  function loadStandings() {
-    fetch("http://localhost:8080/standings")
+  function loadStandings(leagueId) {
+    fetch(`http://localhost:8080/standings?leagueId=${leagueId}`)
       .then((response) => {
         if (!response.ok) {
           throw new Error("Failed to fetch standings");
@@ -40,6 +28,9 @@ document.addEventListener("DOMContentLoaded", () => {
       })
       .then((data) => {
         teamDetails = data.results;
+
+        // Set the league title
+        leagueTitle.textContent = data.league_name;
 
         // Find the latest gameweek
         latestGameweek = Math.max(
@@ -60,6 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Function to populate the dropdown
   function populateGameweekDropdown(latestGameweek) {
+    gameweekSelect.innerHTML = ""; // Clear existing options
     for (let i = 1; i <= latestGameweek; i++) {
       const option = document.createElement("option");
       option.value = i;
@@ -141,15 +133,15 @@ document.addEventListener("DOMContentLoaded", () => {
       const row = document.createElement("tr");
       row.setAttribute("data-team-id", TeamID);
       row.innerHTML = `
-          <td>${index + 1} ${clownHTML}</td>
-          <td>
-              <span class="team-name">${EntryName}</span><br>
-              <span class="manager-name">${PlayerName}</span>
-          </td>
-          <td>${gameweekData.Points}</td>
-          <td>${gameweekData.TotalPoints}</td>
-          <td>${movementIcon}</td>
-      `;
+              <td>${index + 1} ${clownHTML}</td>
+              <td>
+                  <span class="team-name">${EntryName}</span><br>
+                  <span class="manager-name">${PlayerName}</span>
+              </td>
+              <td>${gameweekData.Points}</td>
+              <td>${gameweekData.TotalPoints}</td>
+              <td>${movementIcon}</td>
+          `;
 
       const initialPosition = previousPositions[TeamID] - 1;
       const finalPosition = currentPositions[TeamID] - 1;
@@ -169,6 +161,12 @@ document.addEventListener("DOMContentLoaded", () => {
         } else if (rankMovement < 0) {
           row.classList.add("glow-red");
         }
+
+        // Remove the glow class after the animation ends
+        setTimeout(() => {
+          row.classList.remove("glow-green");
+          row.classList.remove("glow-red");
+        }, 1000);
       }
 
       standingsTableBody.appendChild(row);
@@ -286,6 +284,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Initial load of standings and setup
-  loadStandings();
+  // Event listener for form submission
+  submitLeagueIdButton.addEventListener("click", () => {
+    const leagueId = document.getElementById("leagueId").value;
+    if (leagueId) {
+      loadStandings(leagueId);
+    }
+  });
 });

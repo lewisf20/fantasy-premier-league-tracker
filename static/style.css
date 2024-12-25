@@ -1,8 +1,11 @@
 body {
   font-family: Arial, sans-serif;
-  margin: 20px;
-  background-color: #f7f7f7;
-  color: #333;
+  background-color: #f4f4f4;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 h1 {
@@ -109,6 +112,47 @@ vertical-align: middle;
 .gameweek-navigation button:disabled {
   background-color: #cccccc;
   cursor: not-allowed;
+}
+
+#leagueIdForm {
+  margin: 20px 0;
+  padding: 10px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#leagueIdForm label {
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+#leagueIdForm input {
+  padding: 5px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  margin-right: 10px;
+}
+
+#leagueIdForm button {
+  padding: 5px 10px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+#leagueIdForm button:hover {
+  background-color: #0056b3;
+}
+
+.league-title {
+  margin: 20px 0;
+  font-size: 24px;
+  color: #3c1053;
+  text-align: center;
 }
 
 .movement {

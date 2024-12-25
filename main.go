@@ -6,11 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
-)
-
-const (
-	LeagueID = 979679
 )
 
 var (
@@ -26,12 +23,6 @@ type TeamDetails struct {
 }
 
 func main() {
-	err := initialiseData()
-	if err != nil {
-		log.Fatal("Error: Failed to initialise data", err)
-		return
-	}
-
 	handleRequests()
 
 	fmt.Println("Starting server at port 8080")
@@ -40,8 +31,8 @@ func main() {
 	}
 }
 
-func initialiseData() error {
-	league, err := fpl.GetLeague(LeagueID)
+func initialiseData(leagueID int) error {
+	league, err := fpl.GetLeague(leagueID)
 	if err != nil {
 		log.Println("Error: Failed to get league", err)
 		return err
@@ -49,6 +40,7 @@ func initialiseData() error {
 
 	// set global state for league name
 	leagueName = league.Name
+	teamDetailsMapping = map[int]TeamDetails{}
 
 	for _, manager := range league.Managers {
 		history, err := fpl.GetGameweekHistoryByTeamID(manager.TeamID)
@@ -90,12 +82,31 @@ func withLogging(next http.HandlerFunc) http.HandlerFunc {
 // get standings
 
 type StandingsResponse struct {
-	Results []TeamDetails `json:"results"`
+	LeagueName string        `json:"league_name"`
+	Results    []TeamDetails `json:"results"`
 }
 
 func standingsHandler(w http.ResponseWriter, r *http.Request) {
-	var standings StandingsResponse
+	leagueIDStr := r.URL.Query().Get("leagueId")
+	if leagueIDStr == "" {
+		http.Error(w, "leagueId is required", http.StatusBadRequest)
+		return
+	}
 
+	leagueID, err := strconv.Atoi(leagueIDStr)
+	if err != nil {
+		http.Error(w, "invalid leagueId", http.StatusBadRequest)
+		return
+	}
+
+	err = initialiseData(leagueID)
+	if err != nil {
+		http.Error(w, "Failed to initialise data", http.StatusInternalServerError)
+		return
+	}
+
+	var standings StandingsResponse
+	standings.LeagueName = leagueName
 	for _, teamDetails := range teamDetailsMapping {
 		standings.Results = append(standings.Results, teamDetails)
 	}
