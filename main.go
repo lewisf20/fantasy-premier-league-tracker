@@ -11,20 +11,6 @@ import (
 
 const (
 	LeagueID = 979679
-
-	BaseHistoryURL = "https://fantasy.premierleague.com/api/entry/%d/history/"
-
-	// lewisTeamID  = 4243701
-	// ryanTeamID   = 4160210
-	// callumTeamID = 3585882
-	// eliasTeamID  = 4992779
-	// liamTeamID   = 5133175
-	// jamieTeamID  = 5045999
-	// dyTeamID     = 4638425
-	// jakeTeamID   = 5205282
-	// elliotTeamID = 6179028
-	// joeTeamID    = 3274716
-	// kaiTeamID    = 4912963
 )
 
 var (

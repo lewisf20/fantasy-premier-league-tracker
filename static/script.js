@@ -72,18 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Function to fetch and display standings for the selected gameweek
-  function loadGameweekStandings(gameweek) {
-    // Find the lowest points in the gameweek data
-    const minPoints = Math.min(
-      ...teamDetails.map((team) => team.History[gameweek - 1].Points)
-    );
-
-    // Identify all teams with the lowest points
-    const clownsOfTheWeek = teamDetails.filter(
-      (team) => team.History[gameweek - 1].Points === minPoints
-    );
-
-    // Sort teams by total points for the selected gameweek in descending order
+  function calculateRanks(gameweek) {
     const sortedTeams = [...teamDetails].sort((a, b) => {
       return (
         b.History[gameweek - 1].TotalPoints -
@@ -91,35 +80,99 @@ document.addEventListener("DOMContentLoaded", () => {
       );
     });
 
-    // Clear the table before populating
+    const ranks = {};
+    sortedTeams.forEach((team, index) => {
+      ranks[team.TeamID] = index + 1;
+    });
+
+    return ranks;
+  }
+
+  function loadGameweekStandings(gameweek) {
+    const minPoints = Math.min(
+      ...teamDetails.map((team) => team.History[gameweek - 1].Points)
+    );
+
+    const clownsOfTheWeek = teamDetails.filter(
+      (team) => team.History[gameweek - 1].Points === minPoints
+    );
+
+    const currentRanks = calculateRanks(gameweek);
+    const previousRanks = gameweek > 1 ? calculateRanks(gameweek - 1) : {};
+
+    const sortedTeams = [...teamDetails].sort((a, b) => {
+      return (
+        b.History[gameweek - 1].TotalPoints -
+        a.History[gameweek - 1].TotalPoints
+      );
+    });
+
+    const previousPositions = {};
+    const currentPositions = {};
+
+    sortedTeams.forEach((team, index) => {
+      previousPositions[team.TeamID] = previousRanks[team.TeamID] || index + 1;
+      currentPositions[team.TeamID] = index + 1;
+    });
+
     standingsTableBody.innerHTML = "";
 
-    // Populate the table with gameweek data
     sortedTeams.forEach((team, index) => {
       const { TeamID, PlayerName, EntryName, History } = team;
       const gameweekData = History[gameweek - 1];
 
-      // Determine if this row is one of the Clowns of the Week
       const isClown = clownsOfTheWeek.some((clown) => clown.TeamID === TeamID);
       const clownHTML = isClown
         ? `<img src="./images/clown.png" alt="Clown of the Week" title="Clown of the Week" class="clown-icon">`
         : "";
 
-      // Populate the standings table
+      let rankMovement = 0;
+      if (gameweek > 1) {
+        rankMovement = previousRanks[TeamID] - currentRanks[TeamID];
+      }
+
+      const movementIcon =
+        rankMovement > 0
+          ? `<span class="movement up">▲ ${rankMovement}</span>`
+          : rankMovement < 0
+          ? `<span class="movement down">▼ ${Math.abs(rankMovement)}</span>`
+          : `<span class="movement">-</span>`;
+
       const row = document.createElement("tr");
       row.setAttribute("data-team-id", TeamID);
       row.innerHTML = `
-        <td>${index + 1} ${clownHTML}</td>
-        <td>
-          <span class="team-name">${EntryName}</span><br>
-          <span class="manager-name">${PlayerName}</span>
-        </td>
-        <td>${gameweekData.Points}</td>
-        <td>${gameweekData.TotalPoints}</td>
+          <td>${index + 1} ${clownHTML}</td>
+          <td>
+              <span class="team-name">${EntryName}</span><br>
+              <span class="manager-name">${PlayerName}</span>
+          </td>
+          <td>${gameweekData.Points}</td>
+          <td>${gameweekData.TotalPoints}</td>
+          <td>${movementIcon}</td>
       `;
+
+      const initialPosition = previousPositions[TeamID] - 1;
+      const finalPosition = currentPositions[TeamID] - 1;
+
+      if (initialPosition !== finalPosition) {
+        row.style.transition = "transform 2s ease-out";
+        row.style.transform = `translateY(${
+          (initialPosition - finalPosition) * 100
+        }%)`;
+
+        requestAnimationFrame(() => {
+          row.style.transform = "translateY(0)";
+        });
+
+        if (rankMovement > 0) {
+          row.classList.add("glow-green");
+        } else if (rankMovement < 0) {
+          row.classList.add("glow-red");
+        }
+      }
+
       standingsTableBody.appendChild(row);
 
-      // Add click event listener to show team history
       row.addEventListener("click", () => {
         showTeamHistory(TeamID, teamDetails.length);
       });
