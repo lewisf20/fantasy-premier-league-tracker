@@ -1,217 +1,148 @@
 body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-    background-color: #f7f7f7;
-    color: #333;
+  font-family: Arial, sans-serif;
+  margin: 20px;
+  background-color: #f7f7f7;
+  color: #333;
 }
 
 h1 {
-    text-align: center;
-    color: #3c1053;
+  text-align: center;
+  color: #3c1053;
 }
 
 label, select {
-    display: block;
-    margin: 20px auto;
-    text-align: center;
-    font-size: 16px;
+  display: block;
+  margin: 20px auto;
+  text-align: center;
+  font-size: 16px;
 }
 
 select {
-    padding: 5px;
-    font-size: 16px;
-    border-radius: 4px;
-    border: 1px solid #ddd;
+  padding: 5px;
+  font-size: 16px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
 }
 
 table {
-    width: 80%;
-    margin: 20px auto;
-    border-collapse: collapse;
-    background-color: #fff;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 80%;
+  margin: 20px auto;
+  border-collapse: collapse;
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 th, td {
-    text-align: left;
-    padding: 12px 15px;
+  text-align: left;
+  padding: 12px 15px;
 }
 
 th {
-    background-color: #3c1053;
-    color: #fff;
-    font-weight: bold;
-    text-transform: uppercase;
-    font-size: 14px;
+  background-color: #3c1053;
+  color: #fff;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 14px;
 }
 
 tr {
-    border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
 }
 
 tr:nth-child(even) {
-    background-color: #f9f9f9;
+  background-color: #f9f9f9;
 }
 
 tr:hover {
-    background-color: #f3f1f7;
+  background-color: #f3f1f7;
 }
 
 td:first-child {
-    font-weight: bold;
-    text-align: center;
+  font-weight: bold;
+  text-align: center;
 }
 
 td .team-name {
-    font-weight: bold;
-    color: #3c1053;
+  font-weight: bold;
+  color: #3c1053;
 }
 
 td .manager-name {
-    font-size: 12px;
-    color: #666;
-}
-
-.highlight-row {
-    background-color: #3c1053;
-    color: #fff;
-}
-
-.highlight-row td:nth-child(2) .team-name {
-    color: #00ff00;
-}
-
-.highlight-row td:nth-child(2) .manager-name {
-    color: #fff;
-}
-
-/* Icons for rank movement */
-.rank-up-icon {
-  color: green;
-  font-size: 1.2em;
-}
-  
-.rank-down-icon {
-  color: red;
-  font-size: 1.2em;
-}
-
-.no-change-icon {
-  color: gray;
-  font-size: 1.2em;
-}
-  
-/* Highlight rows that moved up */
-.rank-up {
-  animation: rank-up-animation 0.5s ease, fade-out 6s 0.5s forwards;
-}
-
-/* Highlight rows that moved down */
-.rank-down {
-  animation: rank-down-animation 0.5s ease, fade-out 6s 0.5s forwards;
+  font-size: 12px;
+  color: #666;
 }
 
 /* Clown image styling */
 .clown-icon {
-  width: 24px;
-  height: 24px;
-  margin-left: 5px;
-  vertical-align: middle;
+width: 24px;
+height: 24px;
+margin-left: 5px;
+vertical-align: middle;
 }
 
 /* Center the gameweek navigation buttons */
 .gameweek-navigation {
-    display: flex;
-    justify-content: center;
-    margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
 }
 
 /* Style the buttons */
 .gameweek-navigation button {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    margin: 0 5px;
-    cursor: pointer;
-    font-size: 16px;
-    border-radius: 5px;
-    transition: background-color 0.3s ease;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  margin: 0 5px;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
 }
 
 .gameweek-navigation button:hover {
-    background-color: #0056b3;
+  background-color: #0056b3;
 }
 
 .gameweek-navigation button:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
+  background-color: #cccccc;
+  cursor: not-allowed;
 }
 
 /* Modal styles */
 .modal {
-    display: none;
-    position: fixed;
-    z-index: 1;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgb(0,0,0);
-    background-color: rgba(0,0,0,0.4);
+  display: none;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgb(0,0,0);
+  background-color: rgba(0,0,0,0.4);
 }
 
 .modal-content {
-    background-color: #fefefe;
-    margin: 15% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
+  background-color: #fefefe;
+  margin: 15% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
 }
 
 .close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
 }
 
 .close:hover,
 .close:focus {
-    color: black;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-/* Keyframes for fade-out */
-@keyframes fade-out {
-    to {
-      background-color: transparent;
-    }
-  }
-  
-/* Keyframes for rank animations */
-@keyframes rank-up-animation {
-  from {
-    transform: translateY(30px);
-    opacity: 0.5;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes rank-down-animation {
-  from {
-    transform: translateY(-30px);
-    opacity: 0.5;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
 }
